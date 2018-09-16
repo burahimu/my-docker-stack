@@ -1,0 +1,27 @@
+version: "3.3"
+
+services:
+  app:
+    image: emby/embyserver
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - config:/config
+      - media:/mnt/media
+    deploy:
+      labels:
+        traefik.backend: "emby"
+        traefik.frontend.rule: "Host:emby.docker"
+        traefik.docker.network: dev_reverse-proxy
+        traefik.port: 8096
+    networks:
+      - dev_reverse-proxy
+
+volumes:
+  config:
+  media:
+
+networks:
+  dev_reverse-proxy:
+    external: true
+
