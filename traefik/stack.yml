@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+  reverse-proxy:
+    image: traefik
+    command: --api --docker --docker.swarmMode --docker.watch --file --file.filename=/etc/traefik/rules.toml --file.watch
+    ports:
+      - "80:80"     # The HTTP port
+      - "443:443"   # The HTTPS port
+      - "8080:8080" # The Web UI (enabled by --api)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - conf:/etc/traefik
+    networks:
+      - reverse-proxy
+
+volumes:
+  conf: ~
+
+networks:
+  reverse-proxy:
+    external: overlay
