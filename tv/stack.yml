@@ -5,7 +5,7 @@ services:
     image: "linuxserver/qbittorrent"
     volumes:
       - "qbittorrent.config:/config"
-      - "qbittorrent.download:/downloads"
+      - "storage.downloads:/downloads"
     ports:
       - "6881:6881"
       - "6881:6881/udp"
@@ -22,15 +22,47 @@ services:
       UMASK_SET: "022"
       WEBUI_PORT: "8095"
     networks:
-        dev_reverse-proxy: ~
+      dev_reverse-proxy: ~
+
+  jackett:
+    image: "linuxserver/jackett"
+    volumes:
+      - "jackett.config:/config"
+    deploy:
+      labels:
+        traefik.backend: "jackett"
+        traefik.http.frontend.rule: "Host:jackett.docker"
+        traefik.docker.network: "dev_reverse-proxy"
+        traefik.port: 9117
+    networks:
+      dev_reverse-proxy: ~
+
+
+  radarr:
+    image: "linuxserver/radarr"
+    volumes:
+      - "radarr.config:/config"
+      - "storage.downloads:/downloads"
+      - "storage.movies:/movies"
+    deploy:
+      labels:
+        traefik.backend: "radarr"
+        traefik.http.frontend.rule: "Host:radarr.docker"
+        traefik.docker.network: "dev_reverse-proxy"
+        traefik.port: 7878
+    environment:
+      PUID: "0"
+      PGID: "0"
+    networks:
+      dev_reverse-proxy: ~
 
   emby:
     image: "emby/embyserver"
     volumes:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
-      - "config:/config"
-      - "media:/mnt/media"
+      - "emby.config:/config"
+      - "storage.movies:/media/movies:ro"
     deploy:
       labels:
         traefik.backend: "emby"
@@ -38,15 +70,16 @@ services:
         traefik.docker.network: "dev_reverse-proxy"
         traefik.port: 8096
     networks:
-        dev_reverse-proxy: ~
+      dev_reverse-proxy: ~
 
 volumes:
-  config: ~
-  media: ~
+  emby.config: ~
+  jackett.config: ~
   qbittorrent.config: ~
-  qbittorrent.download: ~
+  radarr.config: ~
+  storage.downloads: ~
+  storage.movies: ~
 
 networks:
   dev_reverse-proxy:
     external: true
-
