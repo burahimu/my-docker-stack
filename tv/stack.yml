@@ -1,25 +1,50 @@
 version: "3.3"
 
 services:
-  app:
-    image: emby/embyserver
+  qbittorrent:
+    image: "linuxserver/qbittorrent"
     volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - config:/config
-      - media:/mnt/media
+      - "qbittorrent.config:/config"
+      - "qbittorrent.download:/downloads"
+    ports:
+      - "6881:6881"
+      - "6881:6881/udp"
+    deploy:
+      labels:
+        traefik.backend: "qbittorrent"
+        traefik.frontend.rule: "Host:torrent.docker"
+        traefik.docker.network: "dev_reverse-proxy"
+        traefik.port: 8095
+    environment:
+      PUID: "33"
+      PGID: "33"
+      TZ: "Europe/Paris"
+      UMASK_SET: "022"
+      WEBUI_PORT: "8095"
+    networks:
+        dev_reverse-proxy: ~
+
+  emby:
+    image: "emby/embyserver"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "config:/config"
+      - "media:/mnt/media"
     deploy:
       labels:
         traefik.backend: "emby"
         traefik.frontend.rule: "Host:emby.docker"
-        traefik.docker.network: dev_reverse-proxy
+        traefik.docker.network: "dev_reverse-proxy"
         traefik.port: 8096
     networks:
-      - dev_reverse-proxy
+        dev_reverse-proxy: ~
 
 volumes:
-  config:
-  media:
+  config: ~
+  media: ~
+  qbittorrent.config: ~
+  qbittorrent.download: ~
 
 networks:
   dev_reverse-proxy:
