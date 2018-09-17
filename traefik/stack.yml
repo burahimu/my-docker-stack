@@ -10,12 +10,12 @@ services:
       - "8080:8080" # The Web UI (enabled by --api)
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock" # So that Traefik can listen to the Docker events
-      - "conf:/etc/traefik"
+      - "traefik.conf:/etc/traefik"
     networks:
-        reverse-proxy: ~
+      reverse-proxy: ~
 
 volumes:
-  conf: ~
+  traefik.conf: ~
 
 networks:
   reverse-proxy:
