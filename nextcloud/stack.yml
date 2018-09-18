@@ -1,0 +1,80 @@
+version: '3.3'
+
+services:
+  app:
+    image: "nextcloud:14.0.0-fpm"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storage.data:/var/www/html"
+    environment:
+      NEXTCLOUD_ADMIN_USER: "admin"
+      NEXTCLOUD_ADMIN_PASSWORD: "adminadmin"
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "toor"
+      MYSQL_HOST: "mariadb"
+    networks:
+      app: ~
+      db: ~
+
+  cron:
+    image: "nextcloud:14.0.0-fpm"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storage.data:/var/www/html"
+    command: "php -d memory_limit=512M -f /var/www/html/cron.php"
+    user: "www-data"
+    deploy:
+      restart_policy:
+        delay: "15m"
+    networks:
+      db: ~
+
+  nginx:
+    image: "nginx"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storage.data:/var/www/html"
+    configs:
+      - source: "nginx.conf"
+        target: "/etc/nginx/nginx.conf"
+        uid: "33"
+        gid: "33"
+    deploy:
+      labels:
+        traefik.backend: "nextcloud"
+        traefik.frontend.rule: "Host:nextcloud.docker"
+        traefik.docker.network: "dev_reverse-proxy"
+        traefik.port: 80
+    networks:
+      app: ~
+      dev_reverse-proxy: ~
+
+  mariadb:
+    image: "mariadb:10"
+    environment:
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_ROOT_PASSWORD: "toor"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "storage.db:/var/lib/mysql"
+    networks:
+      db: ~
+
+volumes:
+  storage.data: ~
+  storage.db: ~
+
+configs:
+  nginx.conf:
+    file: "./nginx.conf/nextcloud.conf"
+
+networks:
+  app: ~
+  db: ~
+  dev_reverse-proxy:
+    external: true

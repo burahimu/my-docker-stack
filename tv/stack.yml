@@ -37,7 +37,6 @@ services:
     networks:
       dev_reverse-proxy: ~
 
-
   radarr:
     image: "linuxserver/radarr"
     volumes:
