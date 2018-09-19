@@ -19,4 +19,4 @@ volumes:
 
 networks:
   reverse-proxy:
-    external: "overlay"
+    driver: "overlay"
